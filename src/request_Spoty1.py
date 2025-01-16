@@ -54,18 +54,18 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
         else:
             print(f"Archivo de salida no encontrado. Creando uno nuevo...")
             processed_df = pd.DataFrame(columns=[
-                'ARTIST_NAME', 'SONG_NAME', 'LYRICS', 'SPOTIFY_URL',
+                'artist_name', 'song_name', 'recording_id', 'SPOTIFY_URL',
                 'ALBUM_NAME', 'ALBUM_RELEASE_DATE', 'DURATION_MS',
                 'POPULARITY'
             ])
 
         # Identificar filas faltantes en `combined_with_spotify`
-        existing_keys = set(processed_df[['ARTIST_NAME', 'SONG_NAME']].dropna().apply(tuple, axis=1))
-        dataset_keys = set(dataset_df[['ARTIST_NAME', 'SONG_NAME']].apply(tuple, axis=1))
+        existing_keys = set(processed_df[['artist_name', 'song_name', 'recording_id']].dropna().apply(tuple, axis=1))
+        dataset_keys = set(dataset_df[['artist_name', 'song_name', 'recording_id']].apply(tuple, axis=1))
         missing_keys = dataset_keys - existing_keys
 
         # Filtrar filas faltantes desde `combined_dataset`
-        missing_rows = dataset_df[dataset_df[['ARTIST_NAME', 'SONG_NAME']].apply(tuple, axis=1).isin(missing_keys)]
+        missing_rows = dataset_df[dataset_df[['artist_name', 'song_name', 'recording_id']].apply(tuple, axis=1).isin(missing_keys)]
 
         if missing_rows.empty:
             print("No hay filas faltantes en combined_dataset para procesar.")
@@ -77,13 +77,13 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
 
         for i, row in missing_rows.iterrows():
             # Obtener datos de Spotify
-            spotify_data = get_spotify_data(row['ARTIST_NAME'], row['SONG_NAME'])
+            spotify_data = get_spotify_data(row['artist_name'], row['song_name'])
 
             # Crear nueva fila completa
             updated_row = {
-                'ARTIST_NAME': row['ARTIST_NAME'],
-                'SONG_NAME': row['SONG_NAME'],
-                'LYRICS': row['LYRICS'],
+                'recording_id': row['recording_id'],
+                'artist_name': row['artist_name'],
+                'song_name': row['song_name'],
                 **spotify_data
             }
             processed_df = pd.concat([processed_df, pd.DataFrame([updated_row])], ignore_index=True)
@@ -94,7 +94,7 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
             # Guardar cada `save_interval` filas procesadas
             if request_count % save_interval == 0:
                 print(f"Guardando progreso después de {request_count} filas procesadas...")
-                processed_df.drop_duplicates(subset=['ARTIST_NAME', 'SONG_NAME'], keep='last', inplace=True)
+                processed_df.drop_duplicates(subset=['recording_id', 'artist_name', 'song_name'], keep='last', inplace=True)
                 processed_df.to_csv(output_file, index=False)
 
             # Detener si se alcanza el límite de solicitudes
@@ -106,7 +106,7 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
             time.sleep(wait_time)
 
         # Guardar archivo final
-        processed_df.drop_duplicates(subset=['ARTIST_NAME', 'SONG_NAME'], keep='last', inplace=True)
+        processed_df.drop_duplicates(subset=['recording_id', 'artist_name', 'song_name'], keep='last', inplace=True)
         print(f"Guardando archivo final en {output_file}...")
         processed_df.to_csv(output_file, index=False)
         print("Proceso completo.")
@@ -118,8 +118,8 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
 if __name__ == "__main__":
     # Directorio base para los archivos
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    dataset_file = os.path.join(base_dir, "data", "split_files", "genius_songs_part_10.csv")
-    output_file = os.path.join(base_dir, "data", "split_files", "genius_songs_part_10_spoti.csv")
+    dataset_file = r"C:\Users\solan\Downloads\clasificador-letras\data\url\new_songs_with_ids_part1.csv"
+    output_file = r"C:\Users\solan\Downloads\clasificador-letras\data\url\new_songs_with_ids_part1_spoti.csv"
 
     # Ejecutar el procesamiento
     add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500, max_requests=35000)
