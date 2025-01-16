@@ -118,8 +118,8 @@ def add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500
 if __name__ == "__main__":
     # Directorio base para los archivos
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    dataset_file = r"C:\Users\solan\Downloads\clasificador-letras\data\url\new_songs_with_ids_part1.csv"
-    output_file = r"C:\Users\solan\Downloads\clasificador-letras\data\url\new_songs_with_ids_part1_spoti.csv"
+    dataset_file = r"C:\Users\solan\Downloads\get_data_from_songs\data\processed\nuevos_ids_encontrados-part2.csv"
+    output_file = r"C:\Users\solan\Downloads\get_data_from_songs\data\raw\new_songs_with_ids_part1_spoti.csv"
 
     # Ejecutar el procesamiento
     add_missing_rows(dataset_file, output_file, wait_time=0.1, save_interval=500, max_requests=35000)

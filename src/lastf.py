@@ -7,13 +7,12 @@ import time
 # Cargar variables de entorno
 load_dotenv()
 API_KEY = os.getenv('LASTFM_API_KEY')  # Clave de API desde el archivo .env
-SECRET = os.getenv('LASTFM_SECRET')    # Secreto desde el archivo .env
 BASE_URL = 'http://ws.audioscrobbler.com/2.0/'
 
-# Cargar el dataset
-input_file = r'C:\Users\solan\Downloads\clasificador-letras\data\cleaned_combined_with_language.csv'
-output_file = r'C:\Users\solan\Downloads\clasificador-letras\data\full_dataset_with_genres_and_tags.csv'
-error_log_file = r'C:\Users\solan\Downloads\clasificador-letras\data\error_log.txt'
+# Ruta de los archivos
+input_file = r'C:\Users\solan\Downloads\get_data_from_songs\data\raw\2_new_songs_with_ids_part1_spoti.csv'
+output_file = r'C:\Users\solan\Downloads\get_data_from_songs\data\processed\2_new_songs_with_ids_tobrainz.csv'
+error_log_file = r'C:\Users\solan\Downloads\clasificador-letras\data\url\2_error_log_fmp1.txt'
 
 # Cargar datos existentes si ya se ha procesado parcialmente
 if os.path.exists(output_file):
@@ -31,7 +30,7 @@ def log_error(message):
     with open(error_log_file, 'a') as f:
         f.write(message + '\n')
 
-# Función para obtener géneros desde Last.fm con manejo de errores
+# Función para obtener géneros desde Last.fm
 def get_genres(artist):
     params = {
         'method': 'artist.getinfo',
@@ -41,18 +40,18 @@ def get_genres(artist):
     }
     try:
         response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()  # Verificar errores HTTP
+        response.raise_for_status()
         data = response.json()
         if 'artist' in data and 'tags' in data['artist']:
             genres = [tag['name'] for tag in data['artist']['tags']['tag']]
             return ', '.join(genres) if genres else 'Unknown'
-    except (requests.exceptions.RequestException, ValueError) as e:
+    except Exception as e:
         error_message = f"Error al obtener géneros para el artista '{artist}': {e}"
         print(error_message)
         log_error(error_message)
     return 'Unknown'
 
-# Función para obtener tags desde Last.fm para canciones con manejo de errores
+# Función para obtener tags desde Last.fm
 def get_track_tags(artist, track):
     params = {
         'method': 'track.getinfo',
@@ -63,21 +62,21 @@ def get_track_tags(artist, track):
     }
     try:
         response = requests.get(BASE_URL, params=params)
-        response.raise_for_status()  # Verificar errores HTTP
+        response.raise_for_status()
         data = response.json()
         if 'track' in data and 'toptags' in data['track']:
             tags = [tag['name'] for tag in data['track']['toptags']['tag']]
             return ', '.join(tags) if tags else 'Unknown'
-    except (requests.exceptions.RequestException, ValueError) as e:
+    except Exception as e:
         error_message = f"Error al obtener tags para la canción '{track}' de '{artist}': {e}"
         print(error_message)
         log_error(error_message)
     return 'Unknown'
 
-# Añadir columnas de géneros de artistas y tags de canciones
+# Procesar filas para añadir géneros y tags
 def process_row(index, row):
-    artist = row['ARTIST_NAME']
-    track = row['SONG_NAME']
+    artist = row['artist_name']
+    track = row['song_name']
     genres = get_genres(artist)
     tags = get_track_tags(artist, track)
     return genres, tags
@@ -97,7 +96,7 @@ for index, row in df.iterrows():
     processed_count += 1
 
     # Imprimir progreso de cada canción procesada
-    print(f"Procesado: {row['ARTIST_NAME']} - {row['SONG_NAME']}")
+    print(f"Procesado: {row['artist_name']} - {row['song_name']}")
 
     # Guardar cada 1000 registros procesados
     if processed_count % 1000 == 0:
